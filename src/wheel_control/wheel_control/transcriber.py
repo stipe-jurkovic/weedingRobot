@@ -3,7 +3,7 @@ from rclpy.node import Node
 
 from sensor_msgs.msg import Joy
 import serial
-ser = serial.Serial("/dev/ttyUSB0", 115200)
+ser = serial.Serial("/dev/serial/by-path/platform-xhci-hcd.1-usb-0:2.3:1.0-port0", 115200)
 speed = 20
 
 def map_joystick_to_motors(x, y):
