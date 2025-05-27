@@ -35,14 +35,15 @@ class MinimalSubscriber(Node):
         elif speed < 0:
             speed = 0
         motorR, motorL  = map_joystick_to_motors(msg.axes[0], msg.axes[3])
-        # motorL = round(abs(msg.axes[1] * speed))
-        # motorR = round(abs(msg.axes[3] * speed))
         dirL = 1 if motorL < 0 else 0
         dirR = 1 if motorR < 0 else 0
+        motorLeft = round(abs(motorL)* speed)
+        motorRight = round(abs(motorR)* speed)
         brake = 1 if msg.buttons[2] == 1 else 0
-        message = '{"MotorL" :' + str(round(abs(motorL)* speed)) + ',"DirectionL":' + str(dirL) + ',"MotorR":' + str(round(abs(motorR)* speed)) + ',"DirectionR":' + str(dirR) + ',"Brake":' + str(brake) + '}\n'
-        print(message)
-        #self.get_logger().info(message)
+        message = '{"MotorL" :' + str(motorLeft) + ',"DirectionL":' + str(dirL) + ',"MotorR":' + str(motorRight) + ',"DirectionR":' + str(dirR) + ',"Brake":' + str(brake) + '}\n'
+        if motorL != 0 and motorR != 0:
+            print(message)
+            self.get_logger().info(message)
         ser.write(message.encode('utf-8'))
 
 
@@ -52,10 +53,6 @@ def main(args=None):
     minimal_subscriber = MinimalSubscriber()
 
     rclpy.spin(minimal_subscriber)
-
-    # Destroy the node explicitly
-    # (optional - otherwise it will be done automatically
-    # when the garbage collector destroys the node object)
     minimal_subscriber.destroy_node()
     rclpy.shutdown()
 
