@@ -1,15 +1,15 @@
+import time
 import rclpy
 from rclpy.node import Node
 
-from sensor_msgs.msg import Joy
+from geometry_msgs.msg import Twist
 import serial
-ser = serial.Serial("/dev/serial/by-path/platform-xhci-hcd.1-usb-0:2.3:1.0-port0", 115200)
 speed = 20
 
-def map_joystick_to_motors(x, y):
+def map_joystick_to_motors(angularZ, linearX):
     # Combine arcade drive logic
-    left = y + x
-    right = y - x
+    left = linearX + angularZ
+    right = linearX - angularZ
 
     # Clamp to range [-1, 1]
     max_val = max(abs(left), abs(right), 1)
@@ -18,43 +18,54 @@ def map_joystick_to_motors(x, y):
 
     return left, right
 
-class MinimalSubscriber(Node):
+class WheelControl(Node):
     
-    def __init__(self):
-        super().__init__('minimal_subscriber')
-        self.subscription = self.create_subscription(Joy,'joy',self.listener_callback,10)
+    def __init__(self, ser):
+        super().__init__('wheel_control')
+        self.subscription = self.create_subscription(Twist,'wheels',self.listener_callback,10)
+        self.ser = ser
         self.subscription  # prevent unused variable warning
 
-    def listener_callback(self, msg: Joy):
+    def listener_callback(self, msg: Twist):
         # Example speed command {"MotorL" :300,"DirectionL":0,"MotorR":300,"DirectionR":0}
         global speed
-        speed += msg.buttons[5] * 1
-        speed -= msg.buttons[4] * 1
-        if speed > 100:
-            speed = 100
-        elif speed < 0:
-            speed = 0
-        motorR, motorL  = map_joystick_to_motors(msg.axes[0], msg.axes[3])
+        motorR, motorL  = map_joystick_to_motors(msg.angular.z, msg.linear.x)
         dirL = 1 if motorL < 0 else 0
         dirR = 1 if motorR < 0 else 0
         motorLeft = round(abs(motorL)* speed)
         motorRight = round(abs(motorR)* speed)
-        brake = 1 if msg.buttons[2] == 1 else 0
+        brake = 0#1 if msg.buttons[2] == 1 else 0
         message = '{"MotorL" :' + str(motorLeft) + ',"DirectionL":' + str(dirL) + ',"MotorR":' + str(motorRight) + ',"DirectionR":' + str(dirR) + ',"Brake":' + str(brake) + '}\n'
         if motorL != 0 and motorR != 0:
             print(message)
             self.get_logger().info(message)
-        ser.write(message.encode('utf-8'))
-
+        self.ser.write(message.encode('utf-8'))
 
 def main(args=None):
-    rclpy.init(args=args)
+    while True:
+        try:
+            print("Attempting to connect to serial port...")
+            rclpy.init(args=args)
+            # Attempt to open the serial port
+            ser = serial.Serial("/dev/serial/by-path/platform-xhci-hcd.1-usb-0:2.3:1.0-port0", 115200)
+            
+            if ser.is_open:
+                print("Serial port opened successfully.")
+            else:
+                print("Failed to open serial port.")
+                continue
+            
+            wheel_control = WheelControl(ser)
 
-    minimal_subscriber = MinimalSubscriber()
-
-    rclpy.spin(minimal_subscriber)
-    minimal_subscriber.destroy_node()
-    rclpy.shutdown()
+            rclpy.spin(wheel_control)
+            
+            wheel_control.destroy_node()
+            break  # Exit loop if successful
+        except (serial.SerialException, OSError) as e:
+            print(f"Serial port error: {e}. Retrying in 5 seconds...")
+        finally:
+            rclpy.shutdown()
+        time.sleep(5)
 
 
 if __name__ == '__main__':
