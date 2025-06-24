@@ -13,6 +13,7 @@ bridge = CvBridge()
 # Adaptirano sa https://github.com/alexzzhu/auto_exposure_control
 
 # PI kontroler parametri
+camera_number = 0
 err_i = 0
 desired_msv = 3.5
 k_p = 1
@@ -88,7 +89,7 @@ class CameraNode(Node):
         exposure = changedExposure
         try:
             subprocess.run([
-                "v4l2-ctl", "-d", "/dev/video0",
+                "v4l2-ctl", "-d", "/dev/video" + str(camera_number),
                 "--set-ctrl", "auto_exposure=1",
                 "--set-ctrl", f"exposure_time_absolute={changedExposure}"
             ], check=True)
@@ -126,11 +127,12 @@ class CameraNode(Node):
 
 
 def main(args=None):
+    global camera_number
     while True:
         try:
-            print("Attempting to connect to camera...")
+            print("Attempting to connect to camera "+ str(camera_number) +" ...")
             rclpy.init(args=args)
-            cam = cv2.VideoCapture(0, cv2.CAP_V4L2)
+            cam = cv2.VideoCapture(camera_number, cv2.CAP_V4L2)
             cam.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*'MJPG'))
             cam.set(cv2.CAP_PROP_FRAME_WIDTH, 4000)
             cam.set(cv2.CAP_PROP_FRAME_HEIGHT, 3000)
@@ -142,6 +144,9 @@ def main(args=None):
             if not cam.isOpened():
                 print("Failed to open camera.")
                 print("Releasing camera and retrying in 2 seconds...")
+                camera_number += 1
+                if camera_number > 2:
+                    camera_number = 0
                 cam.release()
                 time.sleep(2)
                 continue
@@ -156,7 +161,7 @@ def main(args=None):
 
         except Exception as e:
             import traceback
-            print("❌ Caught exception during camera init or ROS spin:")
+            print("Caught exception during camera init or ROS spin:")
             traceback.print_exc()  # Print full traceback
             print("Retrying in 5 seconds...")
 
