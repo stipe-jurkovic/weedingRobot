@@ -19,7 +19,7 @@ desired_msv = 3.5
 k_p = 1
 k_i = 0.8
 max_i = 2
-exposure = 57
+exposure = 73
 treshold = 0.75 
 last_time = 0
 sendFps = 5
@@ -84,18 +84,10 @@ class CameraNode(Node):
         super().destroy_node()
         
     def set_exposure(self, changedExposure):
-        global exposure
-        changedExposure = int(np.clip(changedExposure, 1, 5000))
-        exposure = changedExposure
-        try:
-            subprocess.run([
-                "v4l2-ctl", "-d", "/dev/video" + str(camera_number),
-                "--set-ctrl", "auto_exposure=1",
-                "--set-ctrl", f"exposure_time_absolute={changedExposure}"
-            ], check=True)
-            #self.get_logger().info(f"Exposure set via v4l2-ctl: {changedExposure}")
-        except Exception as e:
-            self.get_logger().warn(f"Failed to set exposure with v4l2-ctl: {e}")
+        global exposure 
+        exposure = int(np.clip(changedExposure, 1, 5000))
+        self.cam.set(cv2.CAP_PROP_EXPOSURE, exposure)
+        #self.get_logger().info(f"Exposure set to: {self.cam.get(cv2.CAP_PROP_EXPOSURE)}")
 
     def auto_exposure_control(self, frame):
         global err_i
@@ -137,10 +129,8 @@ def main(args=None):
             cam.set(cv2.CAP_PROP_FRAME_WIDTH, 4000)
             cam.set(cv2.CAP_PROP_FRAME_HEIGHT, 3000)
             cam.set(cv2.CAP_PROP_FPS, 30)
-            print(f"Camera FPS before setting: {cam.get(cv2.CAP_PROP_FPS)}")   
-
             cam.set(cv2.CAP_PROP_AUTO_EXPOSURE, 1)  # Manual mode
-
+            print(cam.get(cv2.CAP_PROP_EXPOSURE))
             if not cam.isOpened():
                 print("Failed to open camera.")
                 print("Releasing camera and retrying in 2 seconds...")
@@ -163,7 +153,7 @@ def main(args=None):
             import traceback
             print("Caught exception during camera init or ROS spin:")
             traceback.print_exc()  # Print full traceback
-            print("Retrying in 5 seconds...")
+            print("Retrying in 2 seconds...")
 
         finally:
             rclpy.shutdown()
