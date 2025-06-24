@@ -5,6 +5,8 @@ import subprocess
 import cv2
 import time  
 import numpy as np
+import requests
+from datetime import datetime
 from cv_bridge import CvBridge
 bridge = CvBridge()
 
@@ -23,6 +25,18 @@ sendFps = 5
 lastImageTime = 0
 last_frame_time = time.time()
 
+def send_image_to_server(frame): ########################### not tested yet
+    time_taken = datetime.now().strftime("%Y-%m-%d_%H%M%S")
+    _, img_encoded = cv2.imencode('.jpg', frame)
+    files = {'image': (time_taken + '.jpg', img_encoded.tobytes(), 'image/jpeg')}
+    try:
+        response = requests.post('http://192.168.18.107:8000/upload/', files=files, timeout=5)
+        print(f"Image sent, status code: {response.status_code}")
+    except requests.RequestException as e:
+        print(f"Failed to send image: {e}")
+    else:
+        print("Failed to capture image")
+        
 class CameraNode(Node):
     def __init__(self, cam):
         super().__init__('camera_node')
@@ -42,7 +56,7 @@ class CameraNode(Node):
         now = time.time()
         fps = 1.0 / (now - last_frame_time)
         last_frame_time = now
-        self.get_logger().info(f"Actual frame rate: {fps:.2f} FPS")
+        #self.get_logger().info(f"Actual frame rate: {fps:.2f} FPS")
 
         global last_time, lastImageTime
 
@@ -60,7 +74,7 @@ class CameraNode(Node):
             msg.data = buffer.tobytes()
 
             self.publisher.publish(msg)
-            self.get_logger().info("Published compressed image")
+            #self.get_logger().info("Published compressed image")
             lastImageTime = now
 
     def destroy_node(self):
@@ -78,7 +92,7 @@ class CameraNode(Node):
                 "--set-ctrl", "auto_exposure=1",
                 "--set-ctrl", f"exposure_time_absolute={changedExposure}"
             ], check=True)
-            self.get_logger().info(f"Exposure set via v4l2-ctl: {changedExposure}")
+            #self.get_logger().info(f"Exposure set via v4l2-ctl: {changedExposure}")
         except Exception as e:
             self.get_logger().warn(f"Failed to set exposure with v4l2-ctl: {e}")
 
@@ -96,10 +110,7 @@ class CameraNode(Node):
         err_i += err_p
         err_i = np.clip(err_i, -max_i, max_i)
         
-        print(f"Brightness: {float(mean_sample_value):.2f}, Error P: {float(err_p):.2f}, Error I: {float(err_i):.2f}")
         boost = 1
-        
-        # Adjust boost based on exposure value
         if exposure > 300:
             boost = 100
         elif exposure > 200:
@@ -107,7 +118,7 @@ class CameraNode(Node):
         elif exposure > 100:
             boost = 10
 
-        if abs(err_p) > treshold:
+        if abs(err_p) > treshold and (exposure < 5000 or err_p < 0 or err_i < 0):
             current_exp = float(exposure)
             new_exp = float(current_exp + k_p * err_p + k_i * err_i*boost)
             self.set_exposure(new_exp)
