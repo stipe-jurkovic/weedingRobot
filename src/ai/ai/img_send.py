@@ -5,9 +5,10 @@ import subprocess
 import cv2
 import time  
 import numpy as np
-
 from cv_bridge import CvBridge
 bridge = CvBridge()
+
+# Adaptirano sa https://github.com/alexzzhu/auto_exposure_control
 
 # PI kontroler parametri
 err_i = 0
@@ -20,7 +21,6 @@ treshold = 0.75
 last_time = 0
 sendFps = 5
 lastImageTime = 0
-
 last_frame_time = time.time()
 
 class CameraNode(Node):
@@ -38,7 +38,6 @@ class CameraNode(Node):
         if not ret:
             self.get_logger().warn("Failed to read frame")
             return
-        # Inside listener_callback
         global last_frame_time
         now = time.time()
         fps = 1.0 / (now - last_frame_time)
@@ -47,7 +46,6 @@ class CameraNode(Node):
 
         global last_time, lastImageTime
 
-        # Auto exposure (max 10Hz)
         if now - last_time > 0.1:
             self.auto_exposure_control(frame)
             last_time = now
@@ -57,16 +55,13 @@ class CameraNode(Node):
             msg.header.stamp = self.get_clock().now().to_msg()
             msg.format = "jpeg"
 
-            # Downscale to 1280x960
             resized_frame = cv2.resize(frame, (1600, 1200), interpolation=cv2.INTER_AREA)
-            # Compress using JPEG
             ret, buffer = cv2.imencode('.jpg', resized_frame)
             msg.data = buffer.tobytes()
 
             self.publisher.publish(msg)
             self.get_logger().info("Published compressed image")
             lastImageTime = now
-            # Get current exposure value
 
     def destroy_node(self):
         self.cam.release()
@@ -79,7 +74,7 @@ class CameraNode(Node):
         exposure = changedExposure
         try:
             subprocess.run([
-                "v4l2-ctl", "-d", "/dev/video1",
+                "v4l2-ctl", "-d", "/dev/video0",
                 "--set-ctrl", "auto_exposure=1",
                 "--set-ctrl", f"exposure_time_absolute={changedExposure}"
             ], check=True)
@@ -124,7 +119,7 @@ def main(args=None):
         try:
             print("Attempting to connect to camera...")
             rclpy.init(args=args)
-            cam = cv2.VideoCapture(1, cv2.CAP_V4L2)
+            cam = cv2.VideoCapture(0, cv2.CAP_V4L2)
             cam.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*'MJPG'))
             cam.set(cv2.CAP_PROP_FRAME_WIDTH, 4000)
             cam.set(cv2.CAP_PROP_FRAME_HEIGHT, 3000)
@@ -156,7 +151,7 @@ def main(args=None):
 
         finally:
             rclpy.shutdown()
-            time.sleep(5)
+            time.sleep(2)
 
 
 if __name__ == '__main__':
