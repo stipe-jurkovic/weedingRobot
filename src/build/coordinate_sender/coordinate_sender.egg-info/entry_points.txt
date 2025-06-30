@@ -1,0 +1,2 @@
+[console_scripts]
+sender = coordinate_sender.sender:main

@@ -17,7 +17,7 @@ class StepperTranscriber(Node):
             10)
         self.publisher = self.create_publisher(String, 'stepper_control_response', 10)
         # Start a timer that checks for serial messages every 100ms
-        self.timer = self.create_timer(0.1, self.check_serial_input)
+        self.timer = self.create_timer(0.01, self.check_serial_input)
         self.subscription  # prevent unused variable warning
 
     def listener_callback(self, msg: String):
@@ -25,7 +25,7 @@ class StepperTranscriber(Node):
         self.get_logger().info(f'Received message: "{msg.data}"')
         
     def check_serial_input(self):
-        # Called by the timer every 0.1 seconds
+        # Called by the timer every 0.01 seconds
         if self.ser.in_waiting > 0:
             try:
                 response = self.ser.readline().decode('utf-8', errors='ignore').strip()

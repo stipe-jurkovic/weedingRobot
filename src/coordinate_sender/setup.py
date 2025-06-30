@@ -1,6 +1,6 @@
 from setuptools import find_packages, setup
 
-package_name = 'ai'
+package_name = 'coordinate_sender'
 
 setup(
     name=package_name,
@@ -11,17 +11,16 @@ setup(
             ['resource/' + package_name]),
         ('share/' + package_name, ['package.xml']),
     ],
-    install_requires=['setuptools','numpy',
-        'PyTurboJPEG'],
+    install_requires=['setuptools'],
     zip_safe=True,
-    maintainer='stipe',
-    maintainer_email='stipe@todo.todo',
+    maintainer='stipe-jurkovic',
+    maintainer_email='sjurko00@fesb.hr',
     description='TODO: Package description',
     license='TODO: License declaration',
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'img_send = ai.img_send:main'
+            'sender = coordinate_sender.sender:main'
         ],
     },
 )

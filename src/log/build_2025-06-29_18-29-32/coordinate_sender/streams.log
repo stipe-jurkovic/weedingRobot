@@ -1,0 +1,24 @@
+[1.632s] Invoking command in '/home/stipe/weedingRobot/src/coordinate_sender': PYTHONPATH=/home/stipe/weedingRobot/src/build/coordinate_sender/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/stipe/weedingRobot/src/install/coordinate_sender/lib/python3.12/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py egg_info --egg-base ../build/coordinate_sender build --build-base /home/stipe/weedingRobot/src/build/coordinate_sender/build install --record /home/stipe/weedingRobot/src/build/coordinate_sender/install.log --single-version-externally-managed install_data
+[1.956s] running egg_info
+[1.976s] writing ../build/coordinate_sender/coordinate_sender.egg-info/PKG-INFO
+[1.976s] writing dependency_links to ../build/coordinate_sender/coordinate_sender.egg-info/dependency_links.txt
+[1.977s] writing entry points to ../build/coordinate_sender/coordinate_sender.egg-info/entry_points.txt
+[1.977s] writing requirements to ../build/coordinate_sender/coordinate_sender.egg-info/requires.txt
+[1.977s] writing top-level names to ../build/coordinate_sender/coordinate_sender.egg-info/top_level.txt
+[2.019s] reading manifest file '../build/coordinate_sender/coordinate_sender.egg-info/SOURCES.txt'
+[2.020s] writing manifest file '../build/coordinate_sender/coordinate_sender.egg-info/SOURCES.txt'
+[2.021s] running build
+[2.021s] running build_py
+[2.021s] copying coordinate_sender/sender.py -> /home/stipe/weedingRobot/src/build/coordinate_sender/build/lib/coordinate_sender
+[2.021s] running install
+[2.031s] running install_lib
+[2.053s] copying /home/stipe/weedingRobot/src/build/coordinate_sender/build/lib/coordinate_sender/sender.py -> /home/stipe/weedingRobot/src/install/coordinate_sender/lib/python3.12/site-packages/coordinate_sender
+[2.054s] byte-compiling /home/stipe/weedingRobot/src/install/coordinate_sender/lib/python3.12/site-packages/coordinate_sender/sender.py to sender.cpython-312.pyc
+[2.055s] running install_data
+[2.055s] running install_egg_info
+[2.078s] removing '/home/stipe/weedingRobot/src/install/coordinate_sender/lib/python3.12/site-packages/coordinate_sender-0.0.0-py3.12.egg-info' (and everything under it)
+[2.079s] Copying ../build/coordinate_sender/coordinate_sender.egg-info to /home/stipe/weedingRobot/src/install/coordinate_sender/lib/python3.12/site-packages/coordinate_sender-0.0.0-py3.12.egg-info
+[2.080s] running install_scripts
+[2.233s] Installing sender script to /home/stipe/weedingRobot/src/install/coordinate_sender/lib/coordinate_sender
+[2.234s] writing list of installed files to '/home/stipe/weedingRobot/src/build/coordinate_sender/install.log'
+[2.314s] Invoked command in '/home/stipe/weedingRobot/src/coordinate_sender' returned '0': PYTHONPATH=/home/stipe/weedingRobot/src/build/coordinate_sender/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/stipe/weedingRobot/src/install/coordinate_sender/lib/python3.12/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py egg_info --egg-base ../build/coordinate_sender build --build-base /home/stipe/weedingRobot/src/build/coordinate_sender/build install --record /home/stipe/weedingRobot/src/build/coordinate_sender/install.log --single-version-externally-managed install_data

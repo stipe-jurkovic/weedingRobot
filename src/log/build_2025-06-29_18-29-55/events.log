@@ -1,0 +1,89 @@
+[0.000000] (-) TimerEvent: {}
+[0.000393] (-) JobUnselected: {'identifier': 'ai'}
+[0.000713] (-) JobUnselected: {'identifier': 'burn'}
+[0.000740] (-) JobUnselected: {'identifier': 'stepper_control'}
+[0.000760] (-) JobUnselected: {'identifier': 'wheel_control'}
+[0.000918] (coordinate_sender) JobQueued: {'identifier': 'coordinate_sender', 'dependencies': OrderedDict()}
+[0.000944] (coordinate_sender) JobStarted: {'identifier': 'coordinate_sender'}
+[0.099693] (-) TimerEvent: {}
+[0.200012] (-) TimerEvent: {}
+[0.300371] (-) TimerEvent: {}
+[0.400738] (-) TimerEvent: {}
+[0.501104] (-) TimerEvent: {}
+[0.601462] (-) TimerEvent: {}
+[0.701836] (-) TimerEvent: {}
+[0.802228] (-) TimerEvent: {}
+[0.902636] (-) TimerEvent: {}
+[1.002991] (-) TimerEvent: {}
+[1.103393] (-) TimerEvent: {}
+[1.203779] (-) TimerEvent: {}
+[1.304140] (-) TimerEvent: {}
+[1.404509] (-) TimerEvent: {}
+[1.504863] (-) TimerEvent: {}
+[1.605222] (-) TimerEvent: {}
+[1.705603] (-) TimerEvent: {}
+[1.805973] (-) TimerEvent: {}
+[1.906335] (-) TimerEvent: {}
+[2.006704] (-) TimerEvent: {}
+[2.107083] (-) TimerEvent: {}
+[2.207444] (-) TimerEvent: {}
+[2.307812] (-) TimerEvent: {}
+[2.408182] (-) TimerEvent: {}
+[2.508563] (-) TimerEvent: {}
+[2.608914] (-) TimerEvent: {}
+[2.709289] (-) TimerEvent: {}
+[2.809696] (-) TimerEvent: {}
+[2.910075] (-) TimerEvent: {}
+[3.010463] (-) TimerEvent: {}
+[3.110840] (-) TimerEvent: {}
+[3.211203] (-) TimerEvent: {}
+[3.311605] (-) TimerEvent: {}
+[3.411953] (-) TimerEvent: {}
+[3.512323] (-) TimerEvent: {}
+[3.612694] (-) TimerEvent: {}
+[3.713065] (-) TimerEvent: {}
+[3.813438] (-) TimerEvent: {}
+[3.913796] (-) TimerEvent: {}
+[4.014162] (-) TimerEvent: {}
+[4.114571] (-) TimerEvent: {}
+[4.214969] (-) TimerEvent: {}
+[4.315368] (-) TimerEvent: {}
+[4.415688] (-) TimerEvent: {}
+[4.515996] (-) TimerEvent: {}
+[4.616310] (-) TimerEvent: {}
+[4.716623] (-) TimerEvent: {}
+[4.816922] (-) TimerEvent: {}
+[4.917227] (-) TimerEvent: {}
+[4.982188] (coordinate_sender) Command: {'cmd': ['/usr/bin/python3', '-W', 'ignore:setup.py install is deprecated', '-W', 'ignore:easy_install command is deprecated', 'setup.py', 'egg_info', '--egg-base', '../build/coordinate_sender', 'build', '--build-base', '/home/stipe/weedingRobot/src/build/coordinate_sender/build', 'install', '--record', '/home/stipe/weedingRobot/src/build/coordinate_sender/install.log', '--single-version-externally-managed', 'install_data'], 'cwd': '/home/stipe/weedingRobot/src/coordinate_sender', 'env': {'LESSOPEN': '| /usr/bin/lesspipe %s', 'USER': 'stipe', 'SSH_CLIENT': '192.168.18.11 21501 22', 'XDG_SESSION_TYPE': 'tty', 'GIT_ASKPASS': '/home/stipe/.vscode-server/cli/servers/Stable-2901c5ac6db8a986a5666c3af51ff804d05af0d4/server/extensions/git/dist/askpass.sh', 'SHLVL': '1', 'LD_LIBRARY_PATH': '/opt/ros/kilted/opt/zenoh_cpp_vendor/lib:/opt/ros/kilted/lib/aarch64-linux-gnu:/opt/ros/kilted/lib', 'BROWSER': '/home/stipe/.vscode-server/cli/servers/Stable-2901c5ac6db8a986a5666c3af51ff804d05af0d4/server/bin/helpers/browser.sh', 'HOME': '/home/stipe', 'OLDPWD': '/home/stipe', 'TERM_PROGRAM_VERSION': '1.101.2', 'VSCODE_IPC_HOOK_CLI': '/run/user/1000/vscode-ipc-20352500-000e-4882-a784-a72ed3b34b64.sock', 'ROS_PYTHON_VERSION': '3', 'VSCODE_GIT_ASKPASS_MAIN': '/home/stipe/.vscode-server/cli/servers/Stable-2901c5ac6db8a986a5666c3af51ff804d05af0d4/server/extensions/git/dist/askpass-main.js', 'VSCODE_GIT_ASKPASS_NODE': '/home/stipe/.vscode-server/cli/servers/Stable-2901c5ac6db8a986a5666c3af51ff804d05af0d4/server/node', 'SSL_CERT_FILE': '/usr/lib/ssl/cert.pem', 'PYDEVD_DISABLE_FILE_VALIDATION': '1', 'BUNDLED_DEBUGPY_PATH': '/home/stipe/.vscode-server/extensions/ms-python.debugpy-2025.8.0-linux-arm64/bundled/libs/debugpy', 'DBUS_SESSION_BUS_ADDRESS': 'unix:path=/run/user/1000/bus', 'COLORTERM': 'truecolor', 'COLCON_PREFIX_PATH': '/home/stipe/weedingRobot/src/install', 'ROS_DISTRO': 'kilted', 'LOGNAME': 'stipe', '_': '/usr/bin/colcon', 'ROS_VERSION': '2', 'XDG_SESSION_CLASS': 'user', 'TERM': 'xterm-256color', 'XDG_SESSION_ID': '5', 'PATH': '/home/stipe/.vscode-server/cli/servers/Stable-2901c5ac6db8a986a5666c3af51ff804d05af0d4/server/bin/remote-cli:/opt/ros/kilted/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin:/home/stipe/.vscode-server/data/User/globalStorage/github.copilot-chat/debugCommand:/home/stipe/.vscode-server/extensions/ms-python.debugpy-2025.8.0-linux-arm64/bundled/scripts/noConfigScripts', 'XDG_RUNTIME_DIR': '/run/user/1000', 'SSL_CERT_DIR': '/usr/lib/ssl/certs', 'VSCODE_DEBUGPY_ADAPTER_ENDPOINTS': '/home/stipe/.vscode-server/extensions/ms-python.debugpy-2025.8.0-linux-arm64/.noConfigDebugAdapterEndpoints/endpoint-a57380f424e1c956.txt', 'LANG': 'C.UTF-8', 'LS_COLORS': 'rs=0:di=01;34:ln=01;36:mh=00:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:mi=00:su=37;41:sg=30;43:ca=00:tw=30;42:ow=34;42:st=37;44:ex=01;32:*.tar=01;31:*.tgz=01;31:*.arc=01;31:*.arj=01;31:*.taz=01;31:*.lha=01;31:*.lz4=01;31:*.lzh=01;31:*.lzma=01;31:*.tlz=01;31:*.txz=01;31:*.tzo=01;31:*.t7z=01;31:*.zip=01;31:*.z=01;31:*.dz=01;31:*.gz=01;31:*.lrz=01;31:*.lz=01;31:*.lzo=01;31:*.xz=01;31:*.zst=01;31:*.tzst=01;31:*.bz2=01;31:*.bz=01;31:*.tbz=01;31:*.tbz2=01;31:*.tz=01;31:*.deb=01;31:*.rpm=01;31:*.jar=01;31:*.war=01;31:*.ear=01;31:*.sar=01;31:*.rar=01;31:*.alz=01;31:*.ace=01;31:*.zoo=01;31:*.cpio=01;31:*.7z=01;31:*.rz=01;31:*.cab=01;31:*.wim=01;31:*.swm=01;31:*.dwm=01;31:*.esd=01;31:*.avif=01;35:*.jpg=01;35:*.jpeg=01;35:*.mjpg=01;35:*.mjpeg=01;35:*.gif=01;35:*.bmp=01;35:*.pbm=01;35:*.pgm=01;35:*.ppm=01;35:*.tga=01;35:*.xbm=01;35:*.xpm=01;35:*.tif=01;35:*.tiff=01;35:*.png=01;35:*.svg=01;35:*.svgz=01;35:*.mng=01;35:*.pcx=01;35:*.mov=01;35:*.mpg=01;35:*.mpeg=01;35:*.m2v=01;35:*.mkv=01;35:*.webm=01;35:*.webp=01;35:*.ogm=01;35:*.mp4=01;35:*.m4v=01;35:*.mp4v=01;35:*.vob=01;35:*.qt=01;35:*.nuv=01;35:*.wmv=01;35:*.asf=01;35:*.rm=01;35:*.rmvb=01;35:*.flc=01;35:*.avi=01;35:*.fli=01;35:*.flv=01;35:*.gl=01;35:*.dl=01;35:*.xcf=01;35:*.xwd=01;35:*.yuv=01;35:*.cgm=01;35:*.emf=01;35:*.ogv=01;35:*.ogx=01;35:*.aac=00;36:*.au=00;36:*.flac=00;36:*.m4a=00;36:*.mid=00;36:*.midi=00;36:*.mka=00;36:*.mp3=00;36:*.mpc=00;36:*.ogg=00;36:*.ra=00;36:*.wav=00;36:*.oga=00;36:*.opus=00;36:*.spx=00;36:*.xspf=00;36:*~=00;90:*#=00;90:*.bak=00;90:*.crdownload=00;90:*.dpkg-dist=00;90:*.dpkg-new=00;90:*.dpkg-old=00;90:*.dpkg-tmp=00;90:*.old=00;90:*.orig=00;90:*.part=00;90:*.rej=00;90:*.rpmnew=00;90:*.rpmorig=00;90:*.rpmsave=00;90:*.swp=00;90:*.tmp=00;90:*.ucf-dist=00;90:*.ucf-new=00;90:*.ucf-old=00;90:', 'VSCODE_GIT_IPC_HANDLE': '/run/user/1000/vscode-git-287b690f62.sock', 'TERM_PROGRAM': 'vscode', 'AMENT_PREFIX_PATH': '/home/stipe/weedingRobot/src/install/coordinate_sender:/opt/ros/kilted', 'SHELL': '/bin/bash', 'LESSCLOSE': '/usr/bin/lesspipe %s %s', 'ROS_AUTOMATIC_DISCOVERY_RANGE': 'SUBNET', 'VSCODE_GIT_ASKPASS_EXTRA_ARGS': '', 'PWD': '/home/stipe/weedingRobot/src/build/coordinate_sender', 'SSH_CONNECTION': '192.168.18.11 21501 192.168.18.87 22', 'XDG_DATA_DIRS': '/usr/local/share:/usr/share:/var/lib/snapd/desktop', 'PYTHONPATH': '/home/stipe/weedingRobot/src/build/coordinate_sender/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/stipe/weedingRobot/src/install/coordinate_sender/lib/python3.12/site-packages:/home/stipe/weedingRobot/src/install/coordinate_sender/lib/python3.12/site-packages:/opt/ros/kilted/lib/python3.12/site-packages', 'COLCON': '1'}, 'shell': False}
+[5.017373] (-) TimerEvent: {}
+[5.117752] (-) TimerEvent: {}
+[5.218061] (-) TimerEvent: {}
+[5.313217] (coordinate_sender) StdoutLine: {'line': b'running egg_info\n'}
+[5.318139] (-) TimerEvent: {}
+[5.333935] (coordinate_sender) StdoutLine: {'line': b'writing ../build/coordinate_sender/coordinate_sender.egg-info/PKG-INFO\n'}
+[5.334324] (coordinate_sender) StdoutLine: {'line': b'writing dependency_links to ../build/coordinate_sender/coordinate_sender.egg-info/dependency_links.txt\n'}
+[5.334641] (coordinate_sender) StdoutLine: {'line': b'writing entry points to ../build/coordinate_sender/coordinate_sender.egg-info/entry_points.txt\n'}
+[5.334853] (coordinate_sender) StdoutLine: {'line': b'writing requirements to ../build/coordinate_sender/coordinate_sender.egg-info/requires.txt\n'}
+[5.335016] (coordinate_sender) StdoutLine: {'line': b'writing top-level names to ../build/coordinate_sender/coordinate_sender.egg-info/top_level.txt\n'}
+[5.378566] (coordinate_sender) StdoutLine: {'line': b"reading manifest file '../build/coordinate_sender/coordinate_sender.egg-info/SOURCES.txt'\n"}
+[5.379634] (coordinate_sender) StdoutLine: {'line': b"writing manifest file '../build/coordinate_sender/coordinate_sender.egg-info/SOURCES.txt'\n"}
+[5.379825] (coordinate_sender) StdoutLine: {'line': b'running build\n'}
+[5.379955] (coordinate_sender) StdoutLine: {'line': b'running build_py\n'}
+[5.380111] (coordinate_sender) StdoutLine: {'line': b'copying coordinate_sender/sender.py -> /home/stipe/weedingRobot/src/build/coordinate_sender/build/lib/coordinate_sender\n'}
+[5.380591] (coordinate_sender) StdoutLine: {'line': b'running install\n'}
+[5.389900] (coordinate_sender) StdoutLine: {'line': b'running install_lib\n'}
+[5.411660] (coordinate_sender) StdoutLine: {'line': b'copying /home/stipe/weedingRobot/src/build/coordinate_sender/build/lib/coordinate_sender/sender.py -> /home/stipe/weedingRobot/src/install/coordinate_sender/lib/python3.12/site-packages/coordinate_sender\n'}
+[5.412542] (coordinate_sender) StdoutLine: {'line': b'byte-compiling /home/stipe/weedingRobot/src/install/coordinate_sender/lib/python3.12/site-packages/coordinate_sender/sender.py to sender.cpython-312.pyc\n'}
+[5.414274] (coordinate_sender) StdoutLine: {'line': b'running install_data\n'}
+[5.414457] (coordinate_sender) StdoutLine: {'line': b'running install_egg_info\n'}
+[5.418214] (-) TimerEvent: {}
+[5.437986] (coordinate_sender) StdoutLine: {'line': b"removing '/home/stipe/weedingRobot/src/install/coordinate_sender/lib/python3.12/site-packages/coordinate_sender-0.0.0-py3.12.egg-info' (and everything under it)\n"}
+[5.438434] (coordinate_sender) StdoutLine: {'line': b'Copying ../build/coordinate_sender/coordinate_sender.egg-info to /home/stipe/weedingRobot/src/install/coordinate_sender/lib/python3.12/site-packages/coordinate_sender-0.0.0-py3.12.egg-info\n'}
+[5.439670] (coordinate_sender) StdoutLine: {'line': b'running install_scripts\n'}
+[5.518317] (-) TimerEvent: {}
+[5.592065] (coordinate_sender) StdoutLine: {'line': b'Installing sender script to /home/stipe/weedingRobot/src/install/coordinate_sender/lib/coordinate_sender\n'}
+[5.592631] (coordinate_sender) StdoutLine: {'line': b"writing list of installed files to '/home/stipe/weedingRobot/src/build/coordinate_sender/install.log'\n"}
+[5.618434] (-) TimerEvent: {}
+[5.663667] (coordinate_sender) CommandEnded: {'returncode': 0}
+[5.677528] (coordinate_sender) JobEnded: {'identifier': 'coordinate_sender', 'rc': 0}
+[5.678466] (-) EventReactorShutdown: {}

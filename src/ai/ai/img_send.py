@@ -9,6 +9,13 @@ import requests
 from datetime import datetime
 from cv_bridge import CvBridge
 bridge = CvBridge()
+from std_msgs.msg import String
+import gc
+import psutil
+import os
+import threading
+
+from turbojpeg import TurboJPEG, TJPF_GRAY, TJSAMP_420
 
 # Adaptirano sa https://github.com/alexzzhu/auto_exposure_control
 
@@ -25,8 +32,10 @@ last_time = 0
 sendFps = 5
 lastImageTime = 0
 last_frame_time = time.time()
+encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), 75]
+jpeg = TurboJPEG()
 
-def send_image_to_server(frame): ########################### not tested yet
+def send_image_to_server(frame): 
     time_taken = datetime.now().strftime("%Y-%m-%d_%H%M%S")
     _, img_encoded = cv2.imencode('.jpg', frame)
     files = {'image': (time_taken + '.jpg', img_encoded.tobytes(), 'image/jpeg')}
@@ -44,7 +53,15 @@ class CameraNode(Node):
         self.cam = cam
 
         self.publisher = self.create_publisher(CompressedImage, 'image/compressed', 3)
-        self.timer = self.create_timer(0.01, self.listener_callback)
+        self.timer = self.create_timer(0.1, self.listener_callback)
+        
+        self.subscription = self.create_subscription(
+            String,
+            'TriggerBurnTopic',
+            self.response_callback,
+            10
+        )
+        self.send_next_image_to_api = False
 
         self.get_logger().info("Camera initialized")
 
@@ -53,16 +70,25 @@ class CameraNode(Node):
         if not ret:
             self.get_logger().warn("Failed to read frame")
             return
-        global last_frame_time
         now = time.time()
-        fps = 1.0 / (now - last_frame_time)
-        last_frame_time = now
-        #self.get_logger().info(f"Actual frame rate: {fps:.2f} FPS")
+        print_memory_usage()
+        
+        if self.send_next_image_to_api:
+        threading.Thread(target=send_image_to_server, args=(frame.copy(),), daemon=True).start()
+        gc.collect()
+        self.send_next_image_to_api = False
+        
+        # global last_frame_time
+        # fps = 1.0 / (now - last_frame_time)
+        # last_frame_time = now
+        # self.get_logger().info(f"Actual frame rate: {fps:.2f} FPS")
 
         global last_time, lastImageTime
 
-        if now - last_time > 0.1:
-            self.auto_exposure_control(frame)
+        if now - last_time > 0.2:
+            brightness_image = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+            hist = cv2.calcHist([brightness_image], [0], None, [10], [0, 256])
+            self.auto_exposure_control(hist, brightness_image.shape)
             last_time = now
 
         if now - lastImageTime > 1 / sendFps:
@@ -70,13 +96,21 @@ class CameraNode(Node):
             msg.header.stamp = self.get_clock().now().to_msg()
             msg.format = "jpeg"
 
-            resized_frame = cv2.resize(frame, (1600, 1200), interpolation=cv2.INTER_AREA)
-            ret, buffer = cv2.imencode('.jpg', resized_frame)
-            msg.data = buffer.tobytes()
+            msg.data = jpeg.encode(frame, quality=75, jpeg_subsample=TJSAMP_420)
 
+            print(f"Frame size: {frame.shape[1]}x{frame.shape[0]}, Encoded size: {len(msg.data)} bytes")
             self.publisher.publish(msg)
             #self.get_logger().info("Published compressed image")
             lastImageTime = now
+
+    def response_callback(self, msg: String):
+        self.get_logger().info(f"Received response: {msg.data}")
+        if msg.data == "Burn":
+            # Trigger burning logic here
+            self.get_logger().info("Burning triggered")
+            self.send_next_image_to_api = True
+        else:
+            self.get_logger().warn(f"Unknown command received: {msg.data}")
 
     def destroy_node(self):
         self.cam.release()
@@ -89,13 +123,10 @@ class CameraNode(Node):
         self.cam.set(cv2.CAP_PROP_EXPOSURE, exposure)
         #self.get_logger().info(f"Exposure set to: {self.cam.get(cv2.CAP_PROP_EXPOSURE)}")
 
-    def auto_exposure_control(self, frame):
+    def auto_exposure_control(self, hist, shape):
         global err_i
+        rows, cols = shape
 
-        brightness_image = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-        rows, cols = brightness_image.shape
-
-        hist = cv2.calcHist([brightness_image], [0], None, [10], [0, 256])
         mean_sample_value = sum(hist[i] * (i + 1) for i in range(len(hist)))
         mean_sample_value /= (rows * cols)
 
@@ -104,10 +135,10 @@ class CameraNode(Node):
         err_i = np.clip(err_i, -max_i, max_i)
         
         boost = 1
-        if exposure > 300:
+        if exposure > 500:
             boost = 100
         elif exposure > 200:
-            boost = 40
+            boost = 20
         elif exposure > 100:
             boost = 10
 
@@ -117,6 +148,28 @@ class CameraNode(Node):
             self.set_exposure(new_exp)
             self.get_logger().info(f"Exposure update: {current_exp:.3f} -> {new_exp:.3f}")
 
+def print_memory_usage():
+    process = psutil.Process(os.getpid())
+    mem_info = process.memory_info()
+    print(f"Memory used: {mem_info.rss / (1024 * 1024):.2f} MB")
+    
+def set_manual_focus(device, value):
+    try:
+        # Isključi automatski fokus
+        subprocess.run(
+            ["v4l2-ctl", "-d", device, "--set-ctrl", "focus_automatic_continuous=0"],
+            check=True
+        )
+        # Postavi fokus na određenu vrijednost (0–1023)
+        subprocess.run(
+            ["v4l2-ctl", "-d", device, "--set-ctrl", f"focus_absolute={value}"],
+            check=True
+        )
+        print(f"Manual focus set to {value}.")
+    except subprocess.CalledProcessError as e:
+        print(f"Greška prilikom postavljanja fokusa: {e}")
+
+# Primjer poziva
 
 def main(args=None):
     global camera_number
@@ -131,6 +184,7 @@ def main(args=None):
             cam.set(cv2.CAP_PROP_FPS, 30)
             cam.set(cv2.CAP_PROP_AUTO_EXPOSURE, 1)  # Manual mode
             print(cam.get(cv2.CAP_PROP_EXPOSURE))
+            set_manual_focus("/dev/video" + str(camera_number), 552)
             if not cam.isOpened():
                 print("Failed to open camera.")
                 print("Releasing camera and retrying in 2 seconds...")
