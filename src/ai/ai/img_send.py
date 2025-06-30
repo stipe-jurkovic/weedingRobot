@@ -14,6 +14,7 @@ import gc
 import psutil
 import os
 import threading
+import json
 
 from turbojpeg import TurboJPEG, TJPF_GRAY, TJSAMP_420
 
@@ -35,17 +36,6 @@ last_frame_time = time.time()
 encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), 75]
 jpeg = TurboJPEG()
 
-def send_image_to_server(frame): 
-    time_taken = datetime.now().strftime("%Y-%m-%d_%H%M%S")
-    _, img_encoded = cv2.imencode('.jpg', frame)
-    files = {'image': (time_taken + '.jpg', img_encoded.tobytes(), 'image/jpeg')}
-    try:
-        response = requests.post('http://192.168.18.107:8000/upload/', files=files, timeout=5)
-        print(f"Image sent, status code: {response.status_code}")
-    except requests.RequestException as e:
-        print(f"Failed to send image: {e}")
-    else:
-        print("Failed to capture image")
         
 class CameraNode(Node):
     def __init__(self, cam):
@@ -53,8 +43,9 @@ class CameraNode(Node):
         self.cam = cam
 
         self.publisher = self.create_publisher(CompressedImage, 'image/compressed', 3)
+        self.burn_publisher = self.create_publisher(String, 'points_to_burn', 1)
         self.timer = self.create_timer(0.1, self.listener_callback)
-        
+
         self.subscription = self.create_subscription(
             String,
             'TriggerBurnTopic',
@@ -74,9 +65,9 @@ class CameraNode(Node):
         print_memory_usage()
         
         if self.send_next_image_to_api:
-        threading.Thread(target=send_image_to_server, args=(frame.copy(),), daemon=True).start()
-        gc.collect()
-        self.send_next_image_to_api = False
+            threading.Thread(target=self.send_image_to_server, args=(frame.copy(),), daemon=True).start()
+            gc.collect()
+            self.send_next_image_to_api = False
         
         # global last_frame_time
         # fps = 1.0 / (now - last_frame_time)
@@ -112,6 +103,48 @@ class CameraNode(Node):
         else:
             self.get_logger().warn(f"Unknown command received: {msg.data}")
 
+    def send_image_to_server(self, frame): 
+        time_taken = datetime.now().strftime("%Y-%m-%d_%H%M%S")
+        _, img_encoded = cv2.imencode('.jpg', frame)
+        files = {'image': (time_taken + '.jpg', img_encoded.tobytes(), 'image/jpeg')}
+        try:
+            response = requests.post('http://192.168.18.107:8000/upload/', files=files, timeout=50)
+            print(f"Image sent, status code: {response.status_code}")
+            print(f"Response: {response.text}")
+            self.publish_coords(response.text)
+        except requests.RequestException as e:
+            print(f"Failed to send image: {e}")
+            
+    def publish_coords(self, response):
+        try:
+            response_dict = json.loads(response)
+        except json.JSONDecodeError:
+            print("Error: Response is not valid JSON")
+            return []
+
+        # Provjeri postoji li ključ 'coords' i je li tip lista
+        coords = response_dict.get('coords')
+        if not isinstance(coords, list):
+            print("Warning: 'coords' missing or not a list")
+            return []
+
+        # Provjeri da su svi elementi liste liste s dva broja (x,y)
+        safe_coords = []
+        for point in coords:
+            if (isinstance(point, list) or isinstance(point, tuple)) and len(point) == 2:
+                x, y = point
+                if isinstance(x, (int, float)) and isinstance(y, (int, float)):
+                    safe_coords.append((x, y))
+                else:
+                    print(f"Warning: Invalid coordinate values: {point}")
+            else:
+                print(f"Warning: Invalid coordinate format: {point}")
+
+        msg = String()
+        msg.data = str(safe_coords)
+        self.burn_publisher.publish(msg)
+        self.get_logger().info(f"Published coordinates: {safe_coords}")
+    
     def destroy_node(self):
         self.cam.release()
         self.get_logger().info("Camera released")
