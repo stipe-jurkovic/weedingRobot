@@ -30,19 +30,20 @@ max_i = 2
 exposure = 73
 treshold = 0.75 
 last_time = 0
-sendFps = 5
+sendFps = 3
 lastImageTime = 0
 last_frame_time = time.time()
-encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), 75]
 jpeg = TurboJPEG()
 
+target_width = 640
+target_height = 480
         
 class CameraNode(Node):
     def __init__(self, cam):
         super().__init__('camera_node')
         self.cam = cam
 
-        self.publisher = self.create_publisher(CompressedImage, 'image/compressed', 3)
+        self.publisher = self.create_publisher(CompressedImage, 'image/compressed', 1)
         self.burn_publisher = self.create_publisher(String, 'points_to_burn', 1)
         self.timer = self.create_timer(0.1, self.listener_callback)
 
@@ -68,11 +69,7 @@ class CameraNode(Node):
             threading.Thread(target=self.send_image_to_server, args=(frame.copy(),), daemon=True).start()
             gc.collect()
             self.send_next_image_to_api = False
-        
-        # global last_frame_time
-        # fps = 1.0 / (now - last_frame_time)
-        # last_frame_time = now
-        # self.get_logger().info(f"Actual frame rate: {fps:.2f} FPS")
+    
 
         global last_time, lastImageTime
 
@@ -86,14 +83,16 @@ class CameraNode(Node):
             msg = CompressedImage()
             msg.header.stamp = self.get_clock().now().to_msg()
             msg.format = "jpeg"
+            resized_frame = cv2.resize(frame, (target_width, target_height), interpolation=cv2.INTER_AREA)
 
-            msg.data = jpeg.encode(frame, quality=75, jpeg_subsample=TJSAMP_420)
+            msg.data = jpeg.encode(resized_frame, quality=75, jpeg_subsample=TJSAMP_420)
 
             print(f"Frame size: {frame.shape[1]}x{frame.shape[0]}, Encoded size: {len(msg.data)} bytes")
             self.publisher.publish(msg)
             #self.get_logger().info("Published compressed image")
             lastImageTime = now
-
+        del frame
+        gc.collect()  # Force garbage collection to free memory
     def response_callback(self, msg: String):
         self.get_logger().info(f"Received response: {msg.data}")
         if msg.data == "Burn":

@@ -17,10 +17,10 @@ image_height = 3000
 
 # Points: from camera mm → FluidNC mm
 camera_mm_points = np.array([
-    [-15.3, 11.3 - 0.6],
-    [12.75, 11.5 - 0.6],
-    [-15.5, -11.50 - 0.6],
-    [12.75, -11.9 - 0.6]
+    [-15.3 + 1, 11.3 - 1], # 
+    [12.75 + 1, 11.5 - 1],
+    [-15.5 + 1, -11.50 - 1],
+    [12.75 + 1, -11.9 - 1]
 ], dtype=np.float32)
 fluidnc_points = np.array([
     [280, 0],
