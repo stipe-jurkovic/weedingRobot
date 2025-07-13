@@ -1,4 +1,6 @@
 from setuptools import find_packages, setup
+import os
+from glob import glob
 
 package_name = 'coordinate_sender'
 
@@ -11,7 +13,7 @@ setup(
             ['resource/' + package_name]),
         ('share/' + package_name, ['package.xml']),
     ],
-    install_requires=['setuptools'],
+    install_requires=['setuptools', 'msgs_and_srvs'],
     zip_safe=True,
     maintainer='stipe-jurkovic',
     maintainer_email='sjurko00@fesb.hr',

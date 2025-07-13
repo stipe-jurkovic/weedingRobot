@@ -7,13 +7,25 @@ import numpy as np
 import cv2
 import math
 
-buffer_target = 9
+from srvs_and_msgs.srv import SetBurnLength
 
+buffer_target = 9
 
 # Camera parameters
 scale = 10 / 824  # mm per pixel ≈ 0.012135
 image_width = 4000
 image_height = 3000
+
+burn_ms = 100  # Burn time in milliseconds
+
+def get_burn_commands(burn_ms):
+    """Generates burn commands with the specified burn time in milliseconds."""
+    return [
+        "G1 F1",
+        "M3 S10",  # Start laser
+        "G4 P" + f"{burn_ms / 1000:.3f}",  # Wait for xxx s
+        "M5",        # Stop laser
+    ]
 
 # Points: from camera mm → FluidNC mm
 camera_mm_points = np.array([
@@ -80,15 +92,12 @@ class CoordinatePublisher(Node):
             self.burn_response_callback,
             1
         )
+        
+        self.set_burn_length = self.create_service(SetBurnLength, 'set_burn_length', self.set_burn_length)
 
         # Coordinates to send (FluidNC format)
         self.coordinates = []
-        self.burn_commands = [
-            "G1 F1",
-            "M3 S10",  # Start laser
-            "G4 P0.1",  # Wait for 200ms
-            "M5",        # Stop laser
-        ]
+        self.burn_commands = get_burn_commands(burn_ms)
         self.messages = []
         
         self.planner_buffer = 15
@@ -98,6 +107,16 @@ class CoordinatePublisher(Node):
         self.timer = self.create_timer(0.1, self.send_next_command)
         self.timer = self.create_timer(0.1, self.poll)
         self.get_logger().info("CoordinatePublisher initialized")
+        
+    def set_burn_length(self, ms, response):
+        """Set the burn length in milliseconds."""
+        global burn_ms
+        burn_ms = ms.milis
+        self.burn_commands = get_burn_commands(burn_ms)
+        self.get_logger().info(f"Burn length set to {burn_ms} ms")
+        response.successful = True
+        return response  # Indicate success
+        
 
     def send_next_command(self):
         if not self.run:
