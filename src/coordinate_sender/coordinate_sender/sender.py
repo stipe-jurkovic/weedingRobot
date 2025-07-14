@@ -28,11 +28,13 @@ def get_burn_commands(burn_ms):
     ]
 
 # Points: from camera mm → FluidNC mm
+shift_x = 0.3  # Shift in mm to align with FluidNC coordinates
+shift_y = -0.6  # Shift in mm to align with FluidNC coordinates
 camera_mm_points = np.array([
-    [-15.3 + 1, 11.3 - 1], # 
-    [12.75 + 1, 11.5 - 1],
-    [-15.5 + 1, -11.50 - 1],
-    [12.75 + 1, -11.9 - 1]
+    [-15.2 + shift_x, 11.3 + shift_y], # 
+    [12.75 + shift_x, 11.5 + shift_y],
+    [-15.5 + shift_x, -11.5 + shift_y],
+    [12.75 + shift_x, -11.6 + shift_y]
 ], dtype=np.float32)
 fluidnc_points = np.array([
     [280, 0],
