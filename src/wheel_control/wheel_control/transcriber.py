@@ -1,41 +1,40 @@
 import time
 import rclpy
 from rclpy.node import Node
-
 from geometry_msgs.msg import Twist
 import serial
-speed = 20
 
-def map_joystick_to_motors(angularZ, linearX):
+# Example speed command {"MotorL" :300,"DirectionL":0,"MotorR":300,"DirectionR":0}
+
+max_speed = 100
+
+def map_speed_to_motors(angularZ, linearX):
     # Combine arcade drive logic
     left = linearX + angularZ
     right = linearX - angularZ
 
-    # Clamp to range [-1, 1]
-    max_val = max(abs(left), abs(right), 1)
-    left /= max_val
-    right /= max_val
+    # Clamp both left and right to [-max_speed, max_speed]
+    left = round(max(-max_speed, min(left, max_speed)))
+    right = round(max(-max_speed, min(right, max_speed)))
 
-    return left, right
+    dirL = 1 if left < 0 else 0
+    dirR = 1 if right < 0 else 0
+
+    return abs(int(left)), dirL, abs(int(right)), dirR
+
 
 class WheelControl(Node):
     
     def __init__(self, ser):
         super().__init__('wheel_control')
-        self.subscription = self.create_subscription(Twist,'wheels',self.listener_callback,10)
+        self.subscription = self.create_subscription(Twist, 'wheels', self.listener_callback,10)
         self.ser = ser
         self.subscription  # prevent unused variable warning
 
     def listener_callback(self, msg: Twist):
-        # Example speed command {"MotorL" :300,"DirectionL":0,"MotorR":300,"DirectionR":0}
-        global speed
-        motorR, motorL  = map_joystick_to_motors(msg.angular.z, msg.linear.x)
-        dirL = 1 if motorL < 0 else 0
-        dirR = 1 if motorR < 0 else 0
-        motorLeft = round(abs(motorL)* speed)
-        motorRight = round(abs(motorR)* speed)
-        brake = 0#1 if msg.buttons[2] == 1 else 0
-        message = '{"MotorL" :' + str(motorLeft) + ',"DirectionL":' + str(dirL) + ',"MotorR":' + str(motorRight) + ',"DirectionR":' + str(dirR) + ',"Brake":' + str(brake) + '}\n'
+        motorL, dirL, motorR, dirR  = map_speed_to_motors(msg.angular.z, msg.linear.x)
+        brake = 0
+        message = '{"MotorL" :' + str(motorL) + ',"DirectionL":' + str(dirL) + ',"MotorR":' + str(motorR) + ',"DirectionR":' + str(dirR) + ',"Brake":' + str(brake) + '}\n'
         if motorL != 0 and motorR != 0:
             print(message)
             self.get_logger().info(message)
@@ -56,11 +55,9 @@ def main(args=None):
                 continue
             
             wheel_control = WheelControl(ser)
-
             rclpy.spin(wheel_control)
-            
             wheel_control.destroy_node()
-            break  # Exit loop if successful
+            break
         except (serial.SerialException, OSError) as e:
             print(f"Serial port error: {e}. Retrying in 5 seconds...")
         finally:
