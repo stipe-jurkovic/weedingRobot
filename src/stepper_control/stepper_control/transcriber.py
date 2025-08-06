@@ -14,10 +14,10 @@ class StepperTranscriber(Node):
             String,
             'stepper_control',
             self.listener_callback,
-            10)
-        self.publisher = self.create_publisher(String, 'stepper_control_response', 10)
-        # Start a timer that checks for serial messages every 100ms
-        self.timer = self.create_timer(0.01, self.check_serial_input)
+            30)
+        self.publisher = self.create_publisher(String, 'stepper_control_response', 30)
+        # Start a timer that checks for serial messages every xxxms
+        self.timer = self.create_timer(0.05, self.check_serial_input)
         self.subscription  # prevent unused variable warning
 
     def listener_callback(self, msg: String):
@@ -25,7 +25,6 @@ class StepperTranscriber(Node):
         self.get_logger().info(f'Received message: "{msg.data}"')
         
     def check_serial_input(self):
-        # Called by the timer every 0.01 seconds
         if self.ser.in_waiting > 0:
             try:
                 response = self.ser.readline().decode('utf-8', errors='ignore').strip()
@@ -48,7 +47,7 @@ def main(args=None):
         try:
             rclpy.init(args=args)
             # Attempt to open the serial port
-            ser = serial.Serial("/dev/serial/by-path/platform-xhci-hcd.1-usb-0:2.1:1.0-port0", 115200)
+            ser = serial.Serial("/dev/serial/by-path/platform-xhci-hcd.1-usb-0:2.1:1.0-port0", 115200,timeout=0.05)
 
             stepper_transcriber = StepperTranscriber(ser)
 

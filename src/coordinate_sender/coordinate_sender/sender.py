@@ -6,17 +6,15 @@ import ast
 import numpy as np
 import cv2
 import math
-
 from srvs_and_msgs.srv import SetBurnLength
+from collections import deque
+import time
 
-buffer_target = 9
 
 # Camera parameters
 scale = 10 / 824  # mm per pixel ≈ 0.012135
 image_width = 4000
 image_height = 3000
-
-burn_ms = 100  # Burn time in milliseconds
 
 def get_burn_commands(burn_ms):
     """Generates burn commands with the specified burn time in milliseconds."""
@@ -79,92 +77,122 @@ class CoordinatePublisher(Node):
         super().__init__('coordinate_publisher_waits')
 
         # Stepper control publisher
-        self.publisher = self.create_publisher(String, 'stepper_control', 10)
+        self.publisher = self.create_publisher(String, 'stepper_control', 30)
 
         # Stepper response subscriber
         self.subscription = self.create_subscription(
             String,
             'stepper_control_response',
             self.response_callback,
-            10
+            30
         )
+        # Points to burn subscriber
         self.burn_subscription = self.create_subscription(
             String,
             'points_to_burn',
             self.burn_response_callback,
             1
         )
+        self.coord_queue = deque()
         
         self.set_burn_length = self.create_service(SetBurnLength, 'set_burn_length', self.set_burn_length)
+        self.burn_ms = 100  # Burn time in milliseconds
+        self.buffer_size = 50
 
-        # Coordinates to send (FluidNC format)
-        self.coordinates = []
-        self.burn_commands = get_burn_commands(burn_ms)
+        self.burn_commands = get_burn_commands(self.burn_ms)
         self.messages = []
-        
-        self.planner_buffer = 15
-        self.next_command = "$H"
+        self.next_command = ""
         self.index = -1
+        self.burn_index = -1
+        self.next_burn = False
         self.run = False
-        self.timer = self.create_timer(0.1, self.send_next_command)
-        self.timer = self.create_timer(0.1, self.poll)
-        self.get_logger().info("CoordinatePublisher initialized")
+        self.number_of_oks = 0
+        self.number_of_sent_messages= 0
         
+        self.sendTimer = self.create_timer(0.1, self.send_next_command)
+        self.get_logger().info("CoordinatePublisher initialized")
+
     def set_burn_length(self, ms, response):
         """Set the burn length in milliseconds."""
-        global burn_ms
-        burn_ms = ms.milis
-        self.burn_commands = get_burn_commands(burn_ms)
-        self.get_logger().info(f"Burn length set to {burn_ms} ms")
+        self.burn_ms = ms.milis
+        self.burn_commands = get_burn_commands(self.burn_ms)
+        self.get_logger().info(f"Burn length set to {self.burn_ms} ms")
         response.successful = True
         return response  # Indicate success
-        
 
     def send_next_command(self):
-        if not self.run:
-            return
-        if self.index < len(self.messages) and self.planner_buffer > buffer_target:
-            self.next_command = self.messages[self.index]  # G-code command
-            self.index += 1
+        if not self.run: 
+            return # If run is not set to true don't send anything
+        if (self.number_of_oks + self.buffer_size) < self.number_of_sent_messages:
+            return # Wait for enough OKs before sending more commands
+        
+        if self.burn_index < len(self.burn_commands) and self.next_burn == True:
+            self.publish_message(self.burn_commands[self.burn_index])
+            self.burn_index += 1  # Increment index
+        elif self.index < len(self.messages):
+            next_msg = self.messages[self.index]
+            if isinstance(next_msg, tuple) and len(next_msg) == 2:
+                self.next_command, burn = next_msg
+            else:
+                self.next_command = next_msg
+                burn = False
+            self.publish_message(self.next_command)
+            self.next_burn = burn
+            if burn:
+                self.burn_index = 0
+            self.index += 1  # Increment index
         else:
-            print("ReachedEnd")
+            self.get_logger().info("ReachedEnd")
             self.run = False 
+            self.next_burn = False
             self.index = 0 # Stop sending commands after reaching the end
+            
+            if self.coord_queue: # Dequeue next coordinate job if available
+                next_data = self.coord_queue.popleft()
+                self.process_coords(next_data)
+            
             return
         
-        msg = String()
-        msg.data = self.next_command
+                
+    def publish_message(self, msg: str):
+        self.number_of_sent_messages +=1
+        self.publisher.publish(String(data=msg))
+        self.get_logger().info(f"Sent: {msg}")
 
-        self.publisher.publish(msg)
-        self.get_logger().info(f"Sent: {msg.data}")
-        
     def burn_response_callback(self, msg: String):
+        self.coord_queue.append(msg.data)
+        self.get_logger().info(f"Queued new coordinate set, queue size: {len(self.coord_queue)}")
+
+        if not self.run:
+            next_data = self.coord_queue.popleft()
+            self.process_coords(next_data)
+    
+    def process_coords(self, data: str):
         try:
-            # Sigurno parsiraj string u listu tuple-ova
-            coords = ast.literal_eval(msg.data)
+            coords = ast.literal_eval(data)
             if not isinstance(coords, (list, tuple)):
                 raise ValueError("Coords is not a list or tuple")
+
             corrected_coords = []
             for point in coords:
-                if (not isinstance(point, (list, tuple)) or len(point) != 2):
+                if not isinstance(point, (list, tuple)) or len(point) != 2:
                     raise ValueError(f"Invalid point format: {point}")
-                x, y = point
-                self.get_logger().info(f"Received point: x={x}, y={y}")
-                dot = pixel_to_fluidnc(x, y)
-                if dot != "out of range":
-                    corrected_coords.append(dot)
-            self.coordinates = sort_points_greedy(corrected_coords) # Update coordinates
-            self.get_logger().info(f"Updated coordinates: {self.coordinates}")
-            self.messages = []  # Clear previous messages
-            for x, y in self.coordinates:
-                # Move to coordinate
-                self.messages.append(f"G0 X{x:.2f} Y{y:.2f}")
-                # Add burn sequence
-                self.messages.extend(self.burn_commands)
-            self.messages.append(f"G0 X10 Y10")  # Return near home position
-            self.messages.append("$H")  # Home
-            print(f"Generated messages: {self.messages}")
-            self.run = True  # Set run to True to start sending commands
+                coord = pixel_to_fluidnc(*point)
+                if coord != "out of range":
+                    corrected_coords.append(coord)
+
+            sortedCoordinates = sort_points_greedy(corrected_coords) # Update coordinates
+            
+            self.messages.clear() # Clear previous messages
+            self.messages.append(("$H", False))  # Home
+            for x, y in sortedCoordinates:
+                self.messages.append((f"G0 X{x:.2f} Y{y:.2f}", True)) # Move to coordinate
+            self.messages.append(("G0 X10 Y10", False))  # Return near home position
+            self.messages.append(("$H", False))  # Home
+
+            self.run = True
+            self.index = 0
+            self.get_logger().info("Started processing coordinate job.")
 
         except (ValueError, SyntaxError) as e:
             self.get_logger().error(f"Failed to parse coordinates: {e}")
@@ -172,19 +200,21 @@ class CoordinatePublisher(Node):
     def response_callback(self, msg: String):
         self.get_logger().info(f"Received response: {msg.data}")
         
-        match = re.search(r'Bf:(\d+),(\d+)', msg.data)
-        if match:
-            planner_buffer = int(match.group(1))
-            rx_buffer = int(match.group(2))
-            self.planner_buffer = planner_buffer
-            self.get_logger().info(f"Planner buffer (queue depth): {planner_buffer}")
-            #self.get_logger().info(f"RX buffer: {rx_buffer}")
-        else:
-            self.get_logger().info("Bf not found in status line.")
-    def poll(self):
-        if not self.run:
-            return
-        self.publisher.publish(String(data="?"))
+        if "ok" in msg.data:
+            self.number_of_oks += 1
+            print(f"oks: {self.number_of_oks}, sent commands: {self.number_of_sent_messages}")
+
+
+def main(args=None):
+    rclpy.init(args=args)
+    node = CoordinatePublisher()
+    rclpy.spin(node)
+    node.destroy_node()
+    rclpy.shutdown()
+
+if __name__ == '__main__':
+    main()
+
         
 def distance(p1, p2):
     return math.sqrt((p1[0]-p2[0])**2 + (p1[1]-p2[1])**2)
@@ -207,13 +237,3 @@ def sort_points_greedy(points, start=(0,0)):
         current_point = nearest
     
     return sorted_path
-
-def main(args=None):
-    rclpy.init(args=args)
-    node = CoordinatePublisher()
-    rclpy.spin(node)
-    node.destroy_node()
-    rclpy.shutdown()
-
-if __name__ == '__main__':
-    main()
