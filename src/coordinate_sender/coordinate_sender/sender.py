@@ -20,7 +20,7 @@ class CoordinatePublisher(Node):
         self.subscription = self.create_subscription(
             String,
             'stepper_control_response',
-            self.response_callback,
+            self.stepper_response_callback,
             30
         )
         # Points to burn subscriber
@@ -56,7 +56,7 @@ class CoordinatePublisher(Node):
             return # Wait for enough OKs before sending more commands
         
         if self.burn_index < len(self.burn_commands) and self.next_burn == True:
-            self.publish_message(self.burn_commands[self.burn_index])
+            self.publish_message(self.burn_commands[self.burn_index]) # Send burn commands
             self.burn_index += 1  # Increment index
             return
         
@@ -83,7 +83,7 @@ class CoordinatePublisher(Node):
             
             return
                 
-    def publish_message(self, msg: str):
+    def publish_message(self, msg: str): # Send message to topic
         self.number_of_sent_messages +=1
         self.publisher.publish(String(data=msg))
         self.get_logger().info(f"Sent: {msg}")
@@ -135,11 +135,9 @@ class CoordinatePublisher(Node):
         response.successful = True
         return response  # Indicate success
 
-    def response_callback(self, msg: String):
-        #self.get_logger().info(f"Received response: {msg.data}")
-        
+    def stepper_response_callback(self, msg: String):
         if msg.data.strip() == "[MSG:Homed:XY]" and self.run is False:
-            self.number_of_oks = -1
+            self.number_of_oks = -1 # Its going to recieve an ok for homeing
             self.number_of_sent_messages = 0
             self.get_logger().info("Homing complete — counters reset.")
 

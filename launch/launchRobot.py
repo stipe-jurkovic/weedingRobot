@@ -27,13 +27,13 @@ def generate_launch_description():
             respawn=True,
             respawn_delay=4,
         ),
-        # Node(
-        #     package='coordinate_sender',
-        #     executable='sender',
-        #     name='coordinate_sender',
-        #     respawn=True,
-        #     respawn_delay=4,
-        # ),
+        Node(
+            package='coordinate_sender',
+            executable='sender',
+            name='coordinate_sender',
+            respawn=True,
+            respawn_delay=4,
+        ),
         Node(
             package='ai',
             executable='img_send',
