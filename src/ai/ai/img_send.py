@@ -15,6 +15,7 @@ import psutil
 import os
 import threading
 import json
+import base64
 
 from turbojpeg import TurboJPEG, TJPF_GRAY, TJSAMP_420
 
@@ -44,6 +45,7 @@ class CameraNode(Node):
         self.cam = cam
 
         self.publisher = self.create_publisher(CompressedImage, 'image/compressed', 1)
+        self.annotated_image_publisher = self.create_publisher(CompressedImage, 'image/annotated', 1)
         self.burn_publisher = self.create_publisher(String, 'points_to_burn', 1)
         self.timer = self.create_timer(0.1, self.listener_callback)
 
@@ -109,7 +111,7 @@ class CameraNode(Node):
         try:
             response = requests.post('http://192.168.18.107:8000/upload/', files=files, timeout=50)
             print(f"Image sent, status code: {response.status_code}")
-            print(f"Response: {response.text}")
+            #print(f"Response: {response.text}")
             self.publish_coords(response.text)
         except requests.RequestException as e:
             print(f"Failed to send image: {e}")
@@ -143,6 +145,24 @@ class CameraNode(Node):
         msg.data = str(safe_coords)
         self.burn_publisher.publish(msg)
         self.get_logger().info(f"Published coordinates: {safe_coords}")
+                
+        annotatedImg = CompressedImage()
+        annotatedImg.header.stamp = self.get_clock().now().to_msg()
+        annotatedImg.format = "jpeg"
+        data_str = response_dict.get("fully_annotated_image", "")
+
+        if data_str:
+            try:
+                annotatedImg = CompressedImage()
+                annotatedImg.header.stamp = self.get_clock().now().to_msg()
+                annotatedImg.format = "jpeg"
+                annotatedImg.data = base64.b64decode(data_str)
+
+                self.annotated_image_publisher.publish(annotatedImg)
+            except Exception as e:
+                self.get_logger().error(f"Greška pri dekodiranju base64: {e}")
+        else:
+            self.get_logger().info("Poruka nije ispravna: nema podataka")
     
     def destroy_node(self):
         self.cam.release()

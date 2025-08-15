@@ -15,6 +15,7 @@ class CoordinatePublisher(Node):
 
         # Stepper control publisher
         self.publisher = self.create_publisher(String, 'stepper_control', 30)
+        self.status_publisher = self.create_publisher(String, 'burn_progress', 30)
 
         # Stepper response subscriber
         self.subscription = self.create_subscription(
@@ -68,10 +69,12 @@ class CoordinatePublisher(Node):
                 self.next_command = next_msg
                 burn = False
             self.publish_message(self.next_command)
+            self.publish_status_message(f"Sent index: {self.index + 1}/{len(self.messages) + 1} OKs: {self.number_of_oks}/{self.number_of_sent_messages}" )
             self.next_burn = burn
             if burn: self.burn_index = 0
             self.index += 1  # Increment index
         else:
+            self.publish_status_message("Burn operation done")
             self.get_logger().info("ReachedEnd")
             self.run = False 
             self.next_burn = False
@@ -87,6 +90,9 @@ class CoordinatePublisher(Node):
         self.number_of_sent_messages +=1
         self.publisher.publish(String(data=msg))
         self.get_logger().info(f"Sent: {msg}")
+        
+    def publish_status_message(self, msg: str): # Send message to topic
+        self.status_publisher.publish(String(data=msg))
 
     def burn_response_callback(self, msg: String):
         self.coord_queue.append(msg.data)
@@ -143,6 +149,8 @@ class CoordinatePublisher(Node):
 
         if msg.data.strip() == "ok" and self.number_of_sent_messages > 1:
             self.number_of_oks += 1
+            if self.run == False:
+                self.publish_status_message(f"OKs: {self.number_of_oks}/{self.number_of_sent_messages}" )
             self.get_logger().info(f"[Status] OKs received: {self.number_of_oks}, Commands sent: {self.number_of_sent_messages}")
 
 
