@@ -145,24 +145,6 @@ class CameraNode(Node):
         msg.data = str(safe_coords)
         self.burn_publisher.publish(msg)
         self.get_logger().info(f"Published coordinates: {safe_coords}")
-                
-        annotatedImg = CompressedImage()
-        annotatedImg.header.stamp = self.get_clock().now().to_msg()
-        annotatedImg.format = "jpeg"
-        data_str = response_dict.get("fully_annotated_image", "")
-
-        if data_str:
-            try:
-                annotatedImg = CompressedImage()
-                annotatedImg.header.stamp = self.get_clock().now().to_msg()
-                annotatedImg.format = "jpeg"
-                annotatedImg.data = base64.b64decode(data_str)
-
-                self.annotated_image_publisher.publish(annotatedImg)
-            except Exception as e:
-                self.get_logger().error(f"Greška pri dekodiranju base64: {e}")
-        else:
-            self.get_logger().info("Poruka nije ispravna: nema podataka")
     
     def destroy_node(self):
         self.cam.release()
