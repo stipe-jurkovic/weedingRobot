@@ -110,23 +110,23 @@ class CameraNode(Node):
         files = {'image': (time_taken + '.jpg', img_encoded.tobytes(), 'image/jpeg')}
         try:
             response = requests.post('http://192.168.18.107:8000/upload/', files=files, timeout=50)
-            print(f"Image sent, status code: {response.status_code}")
-            #print(f"Response: {response.text}")
+            self.get_logger().info(f"Image sent, status code: {response.status_code}")
+            self.get_logger().info(f"Response: {response.text}")
             self.publish_coords(response.text)
         except requests.RequestException as e:
-            print(f"Failed to send image: {e}")
+            self.get_logger().info(f"Failed to send image: {e}")
             
     def publish_coords(self, response):
         try:
             response_dict = json.loads(response)
         except json.JSONDecodeError:
-            print("Error: Response is not valid JSON")
+            self.get_logger().info("Error: Response is not valid JSON")
             return []
 
         # Provjeri postoji li ključ 'coords' i je li tip lista
         coords = response_dict.get('coords')
         if not isinstance(coords, list):
-            print("Warning: 'coords' missing or not a list")
+            self.get_logger().info("Warning: 'coords' missing or not a list")
             return []
 
         # Provjeri da su svi elementi liste liste s dva broja (x,y)
@@ -137,9 +137,9 @@ class CameraNode(Node):
                 if isinstance(x, (int, float)) and isinstance(y, (int, float)):
                     safe_coords.append((x, y))
                 else:
-                    print(f"Warning: Invalid coordinate values: {point}")
+                    self.get_logger().info(f"Warning: Invalid coordinate values: {point}")
             else:
-                print(f"Warning: Invalid coordinate format: {point}")
+                self.get_logger().info(f"Warning: Invalid coordinate format: {point}")
 
         msg = String()
         msg.data = str(safe_coords)

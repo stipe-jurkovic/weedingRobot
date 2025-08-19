@@ -8,7 +8,7 @@ image_width = 4000
 image_height = 3000
 
 # Points: from camera mm → FluidNC mm
-shift_x = 0.3  # Shift in mm to align with FluidNC coordinates
+shift_x = 0.8  # Shift in mm to align with FluidNC coordinates
 shift_y = -0.6  # Shift in mm to align with FluidNC coordinates
 camera_mm_points = np.array([
     [-15.2 + shift_x, 11.1 + shift_y],
