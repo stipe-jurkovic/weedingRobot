@@ -22,13 +22,13 @@ class StepperTranscriber(Node):
 
     def listener_callback(self, msg: String):
         print_to_Serial(self.ser, msg.data)
-        self.get_logger().info(f'Received message: "{msg.data}"')
+        #self.get_logger().info(f'Received message: "{msg.data}"')
         
     def check_serial_input(self):
         if self.ser.in_waiting > 0:
             try:
                 response = self.ser.readline().decode('utf-8', errors='ignore').strip()
-                self.get_logger().info(f'Received from serial: "{response}"')
+                #self.get_logger().info(f'Received from serial: "{response}"')
                 msg = String()
                 msg.data = response
                 self.publisher.publish(msg)

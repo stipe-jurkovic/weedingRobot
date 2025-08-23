@@ -89,7 +89,7 @@ class CoordinatePublisher(Node):
     def publish_message(self, msg: str): # Send message to topic
         self.number_of_sent_messages +=1
         self.publisher.publish(String(data=msg))
-        self.get_logger().info(f"Sent: {msg}")
+        #self.get_logger().info(f"Sent: {msg}")
         
     def publish_status_message(self, msg: str): # Send message to topic
         self.status_publisher.publish(String(data=msg))
@@ -151,7 +151,7 @@ class CoordinatePublisher(Node):
             self.number_of_oks += 1
             if self.run == False:
                 self.publish_status_message(f"OKs: {self.number_of_oks}/{self.number_of_sent_messages}" )
-            self.get_logger().info(f"[Status] OKs received: {self.number_of_oks}, Commands sent: {self.number_of_sent_messages}")
+            #self.get_logger().info(f"[Status] OKs received: {self.number_of_oks}, Commands sent: {self.number_of_sent_messages}")
 
 
 

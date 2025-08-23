@@ -37,7 +37,7 @@ class WheelControl(Node):
         message = '{"MotorL" :' + str(motorL) + ',"DirectionL":' + str(dirL) + ',"MotorR":' + str(motorR) + ',"DirectionR":' + str(dirR) + ',"Brake":' + str(brake) + '}\n'
         if motorL != 0 and motorR != 0:
             print(message)
-            self.get_logger().info(message)
+            #self.get_logger().info(message)
         self.ser.write(message.encode('utf-8'))
 
 def main(args=None):
